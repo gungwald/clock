@@ -8,6 +8,8 @@ VOL=$(PGM)
 DSK=$(PGM).dsk
 APPLEWIN_VER=1.29.10.0
 TO_REMOVE=$(PGM).bas $(PGM).tok $(DSK) *~
+BASTOKEN=python bastoken/bastoken.py
+VBC=python2 virtual_basic/virtualbasic.py
 
 ifeq ($(OS),Windows_NT)
 	COPY=copy
@@ -29,10 +31,10 @@ $(DSK): $(PGM).tok
 	$(AC) -p $(DSK) $(PGM) BAS 0x801 < $(PGM).tok
 
 $(PGM).tok: $(PGM).bas
-	bastoken $(PGM).bas $(PGM).tok
+	$(BASTOKEN) $(PGM).bas $(PGM).tok
 
 $(PGM).bas: $(SRC)
-	vbc $(SRC)
+	$(VBC) $(SRC)
 
 clean:
 	$(call remove,$(TO_REMOVE))

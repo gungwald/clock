@@ -1,3 +1,6 @@
 [submodule "virtual_basic"]
 	path = virtual_basic
 	url = https://bitbucket.org/andresloz/virtual_basic.git
+[submodule "bastoken"]
+	path = bastoken
+	url = https://github.com/KrisKennaway/bastoken.git
