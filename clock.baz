@@ -1,0 +1,279 @@
+REM
+REM cxxxxxx|/////////////////////////>
+REM 
+REM Clock - Displays a clock
+REM AUTHOR - BILL CHATFIELD
+REM 
+REM cxxxxxx|/////////////////////////>
+REM
+
+GOTO @main
+
+REM ////////////////////////
+REM POPULATE TIME SUBROUTINE
+REM ////////////////////////
+£populateTime
+REM MUST HAVE ALREADY DONE "CALL 768,T$"
+LET hour = peek(775)
+LET min = peek(776)
+LET sec = peek(777)
+REM SOMETIME THE CLOCK RETURNS ZEROS, PREVENT DISLAYING THEM
+IF HOUR=0 AND MIN=0 THEN RETURN
+LET ampm$ = "AM"
+IF hour >= 12 THEN LET ampm$ = "PM"
+IF hour = 0   THEN LET hour = 12
+IF hour > 12  THEN LET hour = hour - 12
+LET hour$ = str$(hour)
+IF min < 10 THEN LET min$ = "0" + str$(min): GOTO @convertSeconds
+LET min$ = str$(min)
+£convertSeconds
+IF sec < 10 THEN LET sec$ = "0" + str$(sec): GOTO @makeTime
+LET sec$ = str$(sec)
+£makeTime
+LET time$ = hour$ + ":" + min$ + ":" + sec$ + " " + ampm$
+PRINT D$;"FRE": REM Call garbage collector to prevent HGR corruption
+RETURN
+
+
+REM ////////////////////
+REM LOAD FONT SUBROUTINE
+REM ////////////////////
+£loadFont
+LET fa{fontAddress} = 16384
+LET rf{randomFont} = int(rnd(1) * fc) + 1
+LET ff${fontFile} = "FONTS/" + ft$(rf) + ".FONT"
+PRINT d$;"BLOAD ";ff$;",A";fa
+REM Tell DHGR where the font was loaded.
+REM by Poking the starting address of the
+REM font in to the 3rd and 4th bytes of DHGR
+REM using a lo-byte/hi-byte FORmat.
+LET da{dhgrAddress} = PEEK (974) + PEEK (975) * 256
+POKE da{dhgrAddress} + 3, 0: REM Poke into 3rd byte of DHGR
+POKE da{dhgrAddress} + 4, 64: REM Poke into 4th byte of DHGR
+RETURN
+
+
+REM ////////////////////////////
+REM ERASE DATE & TIME SUBROUTINE
+REM ////////////////////////////
+£eraseDateTime
+&hcolor = 0: REM SET COLOR TO BLACK TO ERASE TEXT
+&GOTO x, y
+PRINT time$
+&GOTO x, y2
+PRINT dayt$
+RETURN
+
+
+REM ////////////////////////
+REM POPULATE DATE SUBROUTINE
+REM ////////////////////////
+£populateDate
+REM MUST HAVE ALREADY DONE "CALL 768,T$"
+LET year = peek(771)
+LET munth = peek(772)
+LET day = peek(773)
+REM SOMETIME THE CLOCK RETURNS ZEROS, PREVENT DISLAYING THEM
+IF YEAR=0 AND MUNTH=0 AND DAY=0 THEN RETURN
+LET dayt$ = mn$(munth) + " " + str$(day) + ", 20" + str$(year)
+RETURN
+
+
+REM ////////////////
+REM DELAY SUBROUTINE
+REM ////////////////
+£delay
+FOR ii = 1 to 200
+    GOSUB @checkKeypress: IF key$ <> "" THEN GOTO @exit
+NEXT
+RETURN
+
+
+REM //////////////////////
+REM KEY HANDLER SUBROUTINE
+REM //////////////////////
+£checkKeypress
+LET key$ = ""
+IF peek(KBD) < 128 THEN RETURN
+GET key$
+RETURN
+
+
+REM /////////////////////////
+REM SEED RANDOM NUM GENERATOR
+REM /////////////////////////
+£seedRandomNumGenerator
+LET RL = 78: REM RNDL
+LET RH = 79: REM RNDH
+LET seed = PEEK(RL) + PEEK(RH) * 256: REM GET RND SEED
+PRINT "RND SEED=";SEED
+CALL 768,T$
+GOSUB @populateTime
+LET seed=sec + min*256
+PRINT "MIN+SEC SEED=";seed
+LET NA = RND(-seed): REM SEED RANDOM NUM GENERATOR
+RETURN
+
+
+REM /////////////////
+REM DISPLAY FONT NAME
+REM /////////////////
+£displayFontName
+&GOTO 1,1
+&HCOLOR=fg
+PRINT FT$(RF)
+FOR JJ = 1 TO 500
+NEXT
+&GOTO 1,1
+&HCOLOR=0
+PRINT FT$(RF)
+RETURN
+
+
+£decimalToHex
+LET H4 = INT(DECIMAL / 4096): REM 4TH HEX DIGIT: $1000
+LET R4 = DECIMAL - H4 * 4096: REM REMAINDER
+LET H3 = INT(R4 / 256): REM 3RD HEX DIGIT: $0100
+LET R3 = R4 - H3 * 256
+LET H2 = INT(R3 / 16): REM 2ND HEX DIGIT: $0010
+LET R2 = R3 - H2 * 16
+LET H1 = R2: REM 1ST HEX DIGIT: $0001
+LET HEX = H4 + H3 + H2 + H1
+RETURN
+
+
+# TODO
+# Improve code structure and comments
+# Put in github
+# Detect no clock
+# Document, including how to GET a NSC
+# Create HD installer
+
+
+£main
+
+
+REM //////////////
+REM Display Memory
+REM //////////////
+LET START = PEEK(104) * 256 + PEEK(103): REM PGM START ADDRS IN $67 & $68
+LET HIMEM = PEEK(77) * 256 + PEEK(76): REM $4D & $4C
+LET LOMEM = PEEK(75) * 256 + PEEK(74): REM $4B & $4A
+PRINT "START=";START
+PRINT "HIMEM=";HIMEM
+PRINT "LOMEM=";LOMEM
+REM LOMEM: 24576
+
+
+REM //////////////
+REM Init Variables
+REM //////////////
+LET d$ = chr$(4)
+LET ret$ = chr$(13)
+LET esc$ = chr$(27)
+LET SW = 140: REM SCREEN WIDTH
+LET SH = 192: REM SCREEN HEIGHT
+LET KBD = -16384: REM Addr of byte that is neg IF key pressed
+
+DIM mn$(12)
+FOR i = 1 TO 12
+    READ mn$(i)
+NEXT
+DATA Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
+
+DIM ft$(6): REM Font names
+LET fc = 6: REM Font count
+FOR i = 1 to fc
+    READ ft$(i)
+NEXT
+DATA BYTE,COLOSSAL,COUNT,FLOW,GOTHIC,PINOCCHIO
+
+#DATA ASCII,BLIPPO,BYTE,COLOSSAL,COUNT,CYRILLIC,ESPERANTO
+#DATA FLOW,GOTHIC,GRAPHIC,GREEK,KATAKANA,MIRROR,OUTLINE
+#DATA PINOCCHIO,PUDGY,ROMAN,SHADOW,SLANT,"STOP",UPSIDEDOWN
+
+
+REM ////////////
+REM Load helpers
+REM ////////////
+PRINT "LOADING DOUBLE HI-RES DRIVER..."
+PRINT d$;"BRUN DHGR": REM Load Double Hi-res driver
+PRINT "LOADING NO-SLOT-CLOCK DRIVER..."
+PRINT d$;"BLOAD READ.TIME": REM Load No Slot Clock helper
+GOSUB @seedRandomNumGenerator
+
+REM ////////////
+REM Setup Screen
+REM ////////////
+&HGR2: REM FULL SCREEN DOUBLE HIGH RES
+&MODE(2): REM 16-color mode
+&BCOLOR=0: REM SET BACKGROUND TO BLACK
+&CLEAR: REM Draw background
+&PRINT: REM PRINTS GO TO GRAPHICS SCREEN
+GOSUB @loadFont
+
+
+REM ///////////////////////////////
+REM CHOOSE COLOR OR BLACK AND WHITE
+REM ///////////////////////////////
+£question
+&HCOLOR=15
+&GOTO 1,10
+PRINT "COLOR? (Y/N) ";
+GET ANSWER$
+PRINT ANSWER$
+IF ANSWER$<>"Y" AND ANSWER$<>"N" THEN GOTO @question
+IF ANSWER$="Y" THEN LET BW=0
+IF ANSWER$="N" THEN LET BW=1
+&CLEAR: REM Draw background
+
+
+REM ////////////
+REM Display Time
+REM ////////////
+REM Ends when the user presses ESC.
+£displayTime
+GOSUB @loadFont
+CALL 768,T$
+GOSUB @populateTime
+GOSUB @populateDate
+LET x = int(rnd(1) * (sw - 90))
+LET y = int(rnd(1) * (sh - 25))
+LET y2 = y + 10
+IF BW=1 THEN LET FG=15
+IF BW=0 THEN LET fg = int(rnd(1) * 15) + 1: REM Gives 1 - 15, skipping 0 (black)
+&HCOLOR = fg
+&GOTO x, y
+PRINT time$
+&GOTO x, y2
+PRINT dayt$
+FOR i = 1 to 100
+    CALL 768,T$: REM GET DATE/TIME FROM NO-SLOT-CLOCK
+    GOSUB @populateTime
+    &GOTO x, y
+    &HCOLOR = fg:REM MUST SET EVERY TIME. displayFontName COULD CHANGE IT
+    PRINT time$;"   ":REM New time might be shorter
+    GOSUB @checkKeypress
+    IF key$ = "F" or key$ = "f" THEN GOSUB @displayFontName: NEXT
+    IF key$ = "C" or key$ = "c" THEN &clear: GOTO @breakFromLoop
+    IF key$ = ESC$ THEN GOTO @exit
+    IF key$ <> "" THEN GOTO @breakFromLoop
+NEXT
+£breakFromLoop
+GOSUB @eraseDateTime
+GOTO @displayTime
+
+
+
+
+REM ////////////
+REM Exit Handler
+REM ////////////
+REM Called when the user presses ESC.
+£exit
+&NORMAL: REM Undo &PRINT command
+&TEXT 
+PRINT "UNLOADING DOUBLE HI-RES DRIVER..."
+PRINT d$;"-FP"
+END
+
