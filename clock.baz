@@ -2,7 +2,7 @@ REM
 REM cxxxxxx|/////////////////////////>
 REM 
 REM Clock - Displays a clock
-REM AUTHOR - BILL CHATFIELD
+REM Author - Bill Chatfield
 REM 
 REM cxxxxxx|/////////////////////////>
 REM
@@ -99,6 +99,21 @@ GET key$
 RETURN
 
 
+REM //////////////////////
+REM CONVERT DEC TO HEX SUB
+REM //////////////////////
+£convertDecimalToHex
+H$=""
+D=(D<0)*65536+D
+£nextDigit
+B=INT(D/16)
+C=D-B*16
+D=B
+H$=CHR$(C+48+(C>9)*7)+H$
+IF D GOTO @nextDigit
+RETURN
+
+
 REM /////////////////////////
 REM SEED RANDOM NUM GENERATOR
 REM /////////////////////////
@@ -130,17 +145,6 @@ PRINT FT$(RF)
 RETURN
 
 
-£decimalToHex
-LET H4 = INT(DECIMAL / 4096): REM 4TH HEX DIGIT: $1000
-LET R4 = DECIMAL - H4 * 4096: REM REMAINDER
-LET H3 = INT(R4 / 256): REM 3RD HEX DIGIT: $0100
-LET R3 = R4 - H3 * 256
-LET H2 = INT(R3 / 16): REM 2ND HEX DIGIT: $0010
-LET R2 = R3 - H2 * 16
-LET H1 = R2: REM 1ST HEX DIGIT: $0001
-LET HEX = H4 + H3 + H2 + H1
-RETURN
-
 
 # TODO
 # Improve code structure and comments
@@ -157,12 +161,19 @@ REM //////////////
 REM Display Memory
 REM //////////////
 LET START = PEEK(104) * 256 + PEEK(103): REM PGM START ADDRS IN $67 & $68
+LET D = START
+GOSUB @convertDecimalToHex
+PRINT "START=$";h$;"(";START;")"
 LET HIMEM = PEEK(77) * 256 + PEEK(76): REM $4D & $4C
+LET D = HIMEM
+GOSUB @convertDecimalToHex
+PRINT "HIMEM=$";h$;"(";HIMEM;")"
+
+LOMEM: 24576
 LET LOMEM = PEEK(75) * 256 + PEEK(74): REM $4B & $4A
-PRINT "START=";START
-PRINT "HIMEM=";HIMEM
-PRINT "LOMEM=";LOMEM
-REM LOMEM: 24576
+LET D = LOMEM
+GOSUB @convertDecimalToHex
+PRINT "LOMEM=$";h$;"(";LOMEM;")"
 
 
 REM //////////////

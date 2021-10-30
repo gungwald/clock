@@ -9,7 +9,8 @@ DSK=$(PGM).dsk
 APPLEWIN_VER=1.29.10.0
 TO_REMOVE=$(PGM).bas $(PGM).tok $(DSK) *~
 BASTOKEN=python bastoken/bastoken.py
-VBC=python2 virtual_basic/virtualbasic.py
+VB=virtual_basic/virtualbasic.py
+VBC=python2 $(VB)
 
 ifeq ($(OS),Windows_NT)
 	COPY=copy
@@ -33,10 +34,10 @@ $(DSK): $(PGM).tok
 $(PGM).tok: $(PGM).bas
 	$(BASTOKEN) $(PGM).bas $(PGM).tok
 
-$(PGM).bas: $(SRC) $(VBC)
+$(PGM).bas: $(SRC) $(VB)
 	$(VBC) $(SRC)
 
-$(VBC):
+$(VB):
 	git submodule init
 	git submodule update
 
