@@ -33,8 +33,12 @@ $(DSK): $(PGM).tok
 $(PGM).tok: $(PGM).bas
 	$(BASTOKEN) $(PGM).bas $(PGM).tok
 
-$(PGM).bas: $(SRC)
+$(PGM).bas: $(SRC) $(VBC)
 	$(VBC) $(SRC)
+
+$(VBC):
+	git submodule init
+	git submodule update
 
 clean:
 	$(call remove,$(TO_REMOVE))
