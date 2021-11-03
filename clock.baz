@@ -41,6 +41,7 @@ REM ////////////////////
 £loadFont
 LET fa{fontAddress} = 16384
 LET rf{randomFont} = int(rnd(1) * fc) + 1
+LET rf = 3 {hardcode to 3rd font}
 LET ff${fontFile} = "FONTS/" + ft$(rf) + ".FONT"
 PRINT d$;"BLOAD ";ff$;",A";fa
 REM Tell DHGR where the font was loaded.
@@ -244,7 +245,7 @@ REM Display Time
 REM ////////////
 REM Ends when the user presses ESC.
 £displayTime
-GOSUB @loadFont
+rem GOSUB @loadFont
 CALL 768,T$
 GOSUB @populateTime
 GOSUB @populateDate
